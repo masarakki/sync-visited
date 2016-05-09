@@ -68,8 +68,8 @@ let getDevice = (callback) => {
 };
 
 let registerDevice = (deviceArn) => {
-  chrome.storage.sync.get('devices', (result) => {
-    let devices = result.devices || [];
+  chrome.storage.sync.get({devices: []}, (result) => {
+    let devices = result.devices;
     devices.push(deviceArn);
     chrome.storage.sync.set({devices: devices}, () => {});
   });
