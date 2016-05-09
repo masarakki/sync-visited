@@ -51,6 +51,14 @@ let get_endpoint_arn = () => {
   });
 };
 
+let set_endpoint_arn = (endpoint) => {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.set({device: endpoint}, () => {
+      resolve(endpoint);
+    });
+  });
+};
+
 let register_endpoint = (device_id, uuid) => {
   return new Promise((resolve, reject) => {
     let sns = new AWS.SNS();
@@ -58,14 +66,14 @@ let register_endpoint = (device_id, uuid) => {
     let args = {
       PlatformApplicationArn: applicationArn,
       Token: device_id,
-      CustomUserData: uuid
+      CustomUserData: `${chrome.runtime.id}: ${uuid}`
     };
 
     sns.createPlatformEndpoint(args, (err, data) => {
       if (err) {
         reject(err);
       } else {
-        resolve(data);
+        resolve(data.EndpointArn);
       }
     });
   });
@@ -115,11 +123,9 @@ let requestVisits = () => {
 let sendMessage = (subject, message) => {
   let sns = new AWS.SNS();
 
-  chrome.storage.sync.get('devices', result => {
-    result.devices.forEach(device => {
+  get_devices().then(devices => {
+    devices.forEach(device => {
       sns.publish({Subject: subject, TargetArn: device, Message: message}, (err, data) => {
-        console.log(err);
-        console.log(data);
       });
     });
   });
@@ -134,6 +140,8 @@ let setup_device = () => {
     }).catch(() => {
       Promise.all([get_device_id(), get_uuid()]).then(res => {
         return register_endpoint(res[0], res[1]);
+      }).then(endpoint => {
+        return set_endpoint_arn(endpoint);
       }).then(endpoint => {
         resolve(endpoint);
       }).catch(err => {
