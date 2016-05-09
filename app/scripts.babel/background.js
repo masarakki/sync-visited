@@ -26,9 +26,81 @@ let get_synced_at = (callback) => {
   });
 };
 
+let get_uuid = () => {
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.get('uuid', item => {
+      let uuid = item.uuid;
+      if (!uuid) {
+        uuid = require('node-uuid').v4();
+        chrome.storage.sync.set({uuid: uuid}, () => {});
+      }
+      resolve(uuid);
+    });
+  });
+};
+
+let get_endpoint_arn = () => {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get('device', (item) => {
+      if (item.device) {
+        resolve(item.device);
+      } else {
+        reject();
+      }
+    });
+  });
+};
+
+let register_endpoint = (device_id, uuid) => {
+  return new Promise((resolve, reject) => {
+    let sns = new AWS.SNS();
+
+    let args = {
+      PlatformApplicationArn: applicationArn,
+      Token: device_id,
+      CustomUserData: uuid
+    };
+
+    sns.createPlatformEndpoint(args, (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
+};
+
+let get_devices = () => {
+  return new Promise((resolve, reject) => {
+    chrome.storage.sync.get({devices: []}, item => {
+      resolve(item.devices);
+    });
+  });
+};
+
+let get_device_id = () => {
+  return new Promise((resolve, reject) => {
+    chrome.gcm.register([senderId], device => {
+      resolve(device);
+    });
+  });
+};
+
+let sync_endpoint = (endpoint) => {
+  return new Promise((resolve, reject) => {
+    get_devices().then(devices => {
+      devices = _.union(devices, [endpoint]);
+      chrome.storage.sync.set({devices: devices}, res => {
+        resolve(devices);
+      });
+    });
+  });
+}
+
 let set_synced_at = (time) => {
   chrome.storage.local.set({synced_at: time}, () => {});
-}
+};
 
 let requestVisits = () => {
   if (enable) {
@@ -38,41 +110,6 @@ let requestVisits = () => {
       });
     });
   }
-};
-
-let getDevice = (callback) => {
-  chrome.storage.local.get('device', result => {
-    if (result.device) {
-      callback(result.device);
-      return;
-    }
-
-    chrome.gcm.register([senderId], device => {
-      let sns = new AWS.SNS();
-      sns.createPlatformEndpoint({
-        PlatformApplicationArn: applicationArn,
-        Token: device
-      }, (err, data) => {
-        let token = null;
-        if (err) {
-          console.log(err);
-          return;
-        } else {
-          chrome.storage.local.set({device: data.EndpointArn});
-          registerDevice(data.EndpointArn);
-          callback(data.EndpointArn);
-        }
-      });
-    });
-  });
-};
-
-let registerDevice = (deviceArn) => {
-  chrome.storage.sync.get({devices: []}, (result) => {
-    let devices = result.devices;
-    devices.push(deviceArn);
-    chrome.storage.sync.set({devices: devices}, () => {});
-  });
 };
 
 let sendMessage = (subject, message) => {
@@ -90,10 +127,29 @@ let sendMessage = (subject, message) => {
 
 chrome.runtime.onStartup.addListener(requestVisits);
 
-chrome.runtime.onInstalled.addListener(details => {
-  getDevice(device => { console.log(device); });
-});
+let setup_device = () => {
+  return new Promise((resolve, reject) => {
+    get_endpoint_arn().then(endpoint => {
+      resolve(endpoint);
+    }).catch(() => {
+      Promise.all([get_device_id(), get_uuid()]).then(res => {
+        return register_endpoint(res[0], res[1]);
+      }).then(endpoint => {
+        resolve(endpoint);
+      }).catch(err => {
+        reject(err);
+      });
+    });
+  });
+};
 
+chrome.runtime.onInstalled.addListener(details => {
+  setup_device().then(sync_endpoint).then(devices => {
+    console.log(devices);
+  }).catch(err => {
+    console.log('error in setup_device', err);
+  });
+});
 
 let visitedAfter = (from, callback) => {
   chrome.history.search({text: '', startTime: from, maxResults: 1000 * 1000}, (histories) => {
