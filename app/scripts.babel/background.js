@@ -123,9 +123,14 @@ let requestVisits = () => {
 let sendMessage = (subject, message) => {
   let sns = new AWS.SNS();
 
-  get_devices().then(devices => {
-    devices.forEach(device => {
-      sns.publish({Subject: subject, TargetArn: device, Message: message}, (err, data) => {
+  Promise.all([get_devices(), get_endpoint_arn()]).then(result => {
+    let endpoints = result[0];
+    let myself = result[1];
+
+    endpoints.filter(endpoint => {
+      return endpoint != myself;
+    }).forEach(endpoint => {
+      sns.publish({Subject: subject, TargetArn: endpoint, Message: message}, (err, data) => {
       });
     });
   });
