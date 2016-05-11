@@ -131,7 +131,7 @@ let requestVisits = () => {
   }
 };
 
-let sendMessage = (subject, message) => {
+let send_message = (message) => {
   let sns = new AWS.SNS();
 
   Promise.all([get_devices(), get_endpoint_arn()]).then(result => {
@@ -141,7 +141,7 @@ let sendMessage = (subject, message) => {
     endpoints.filter(endpoint => {
       return endpoint != myself;
     }).forEach(endpoint => {
-      sns.publish({Subject: subject, TargetArn: endpoint, Message: message}, (err, data) => {
+      sns.publish({TargetArn: endpoint, Message: JSON.stringify(message)}, (err, data) => {
         if (err && !err.retryable) {
           reject_endpoint(endpoint).then(endpoints => {
             console.log('rejected', endpoints);
@@ -199,17 +199,24 @@ chrome.history.onVisited.addListener(item => {
     return;
   }
   if (item.visitCount === 1) {
-    sendMessage('url', item.url);
+    send_message({action: 'visit', url: item.url});
   }
 });
 
-chrome.gcm.onMessage.addListener(message => {
-  let url = message.data.default;
+let recieve_visited = (url) => {
   chrome.history.getVisits({ url: url }, res => {
     if (res.length === 0) {
-      chrome.history.addUrl({ url: url }, () => {
-        ignoreUrls.push(url);
-      });
+      ignoreUrls.push(url);
+      chrome.history.addUrl({ url: url }, () => {});
     }
   });
+};
+
+chrome.gcm.onMessage.addListener(message => {
+  let data = JSON.parse(message.data.default);
+  switch (data.action) {
+  case 'visit':
+    recieve_visited(data.url);
+    break;
+  }
 });
