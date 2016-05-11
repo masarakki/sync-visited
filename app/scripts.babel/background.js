@@ -104,7 +104,18 @@ let sync_endpoint = (endpoint) => {
       });
     });
   });
-}
+};
+
+let reject_endpoint = (endpoint) => {
+  return new Promise((resolve, reject) => {
+    get_devices().then(devices => {
+      devices = _.reject(devices, device => { return device == endpoint; });
+      chrome.storage.sync.set({devices: devices}, res => {
+        resolve(devices);
+      });
+    });
+  });
+};
 
 let set_synced_at = (time) => {
   chrome.storage.local.set({synced_at: time}, () => {});
@@ -131,6 +142,13 @@ let sendMessage = (subject, message) => {
       return endpoint != myself;
     }).forEach(endpoint => {
       sns.publish({Subject: subject, TargetArn: endpoint, Message: message}, (err, data) => {
+        if (err && !err.retryable) {
+          reject_endpoint(endpoint).then(endpoints => {
+            console.log('rejected', endpoints);
+          });
+        } else {
+          console.log('success', data);
+        }
       });
     });
   });
