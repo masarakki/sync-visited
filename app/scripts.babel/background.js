@@ -16,13 +16,19 @@ AWS.config.update({
 });
 
 
-let get_synced_at = (callback) => {
-  chrome.storage.local.get('synced_at', item => {
-    if (chrome.runtime.lastError) {
-      callback(0);
-    } else {
-      callback(item.synced_at);
-    }
+let get_synced_at = () => {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.get({synced_at: 0}, item => {
+      resolve(item.synced_at);
+    });
+  });
+};
+
+let set_synced_at = (time) => {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.set({synced_at: time}, () => {
+      resolve(time);
+    });
   });
 };
 
@@ -117,18 +123,32 @@ let reject_endpoint = (endpoint) => {
   });
 };
 
-let set_synced_at = (time) => {
-  chrome.storage.local.set({synced_at: time}, () => {});
+let visited_after = (synced_at) => {
+  return new Promise((resolve, reject) => {
+    chrome.history.search({text: '', startTime: synced_at, maxResults: 1000 * 1000}, histories => {
+      resolve(histories);
+    });
+  });
 };
 
-let requestVisits = () => {
-  if (enable) {
-    get_synced_at(time => {
-      visitedAfter(time, histories => {
-        console.log(histories.length);
+let request_visits = () => {
+  Promise.all([get_synced_at(), get_endpoint_arn()]).then(result => {
+    let synced_at = result[0];
+    let endpoint = result[1];
+    send_message({action: 'sync', synced_at: synced_at, endpoint: endpoint});
+  });
+};
+
+let send_message_to = (message, endpoint) => {
+  sns.publish({TargetArn: endpoint, Message: JSON.stringify(message)}, (err, data) => {
+    if (err && !err.retryable) {
+      reject_endpoint(endpoint).then(endpoints => {
+        console.log('rejected', endpoints);
       });
-    });
-  }
+    } else {
+      console.log('success', data);
+    }
+  });
 };
 
 let send_message = (message) => {
@@ -141,20 +161,12 @@ let send_message = (message) => {
     endpoints.filter(endpoint => {
       return endpoint != myself;
     }).forEach(endpoint => {
-      sns.publish({TargetArn: endpoint, Message: JSON.stringify(message)}, (err, data) => {
-        if (err && !err.retryable) {
-          reject_endpoint(endpoint).then(endpoints => {
-            console.log('rejected', endpoints);
-          });
-        } else {
-          console.log('success', data);
-        }
-      });
+      send_message_to(message, endpoint);
     });
   });
 };
 
-chrome.runtime.onStartup.addListener(requestVisits);
+chrome.runtime.onStartup.addListener(request_visits);
 
 let setup_device = () => {
   return new Promise((resolve, reject) => {
@@ -182,13 +194,6 @@ chrome.runtime.onInstalled.addListener(details => {
   });
 });
 
-let visitedAfter = (from, callback) => {
-  chrome.history.search({text: '', startTime: from, maxResults: 1000 * 1000}, (histories) => {
-    callback(histories);
-  });
-};
-
-
 let ignoreUrls = [];
 
 chrome.history.onVisited.addListener(item => {
@@ -203,6 +208,19 @@ chrome.history.onVisited.addListener(item => {
   }
 });
 
+let response_visits = (synced_at, endpoint) => {
+  visited_after(synced_at).then(histories => {
+    let urls = _.chain(histories).filter(history => {
+      return history.visitCount == 1;
+    }).map(history => {
+      return history.url;
+    }).uniq().value();
+    _.each(_.chunk(urls, 10), urls => {
+      send_message_to({action: 'visit', urls: urls}, endpoint);
+    });
+  });
+};
+
 let recieve_visited = (urls) => {
   let inner = (url) => {
     chrome.history.getVisits({ url: url }, res => {
@@ -215,6 +233,7 @@ let recieve_visited = (urls) => {
   _.each(urls, url => {
     inner(url);
   });
+  set_synced_at(_.now());
 };
 
 chrome.gcm.onMessage.addListener(message => {
@@ -223,5 +242,7 @@ chrome.gcm.onMessage.addListener(message => {
   case 'visit':
     recieve_visited(data.urls);
     break;
+  case 'sync':
+    response_visits(data.synced_at, data.endpoint);
   }
 });
