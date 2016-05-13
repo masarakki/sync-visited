@@ -4,7 +4,7 @@ chrome.runtime.onInstalled.addListener(details => {
   console.log('previousVersion', details.previousVersion);
 });
 
-let _ = require('underscore');
+let _ = require('lodash');
 let AWS = require('aws-sdk');
 let senderId = '894495215557';
 let applicationArn = 'arn:aws:sns:us-east-1:009775665146:app/GCM/sync-visited';
