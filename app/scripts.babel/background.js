@@ -199,16 +199,21 @@ chrome.history.onVisited.addListener(item => {
     return;
   }
   if (item.visitCount === 1) {
-    send_message({action: 'visit', url: item.url});
+    send_message({action: 'visit', urls: item.url});
   }
 });
 
-let recieve_visited = (url) => {
-  chrome.history.getVisits({ url: url }, res => {
-    if (res.length === 0) {
-      ignoreUrls.push(url);
-      chrome.history.addUrl({ url: url }, () => {});
-    }
+let recieve_visited = (urls) => {
+  let inner = (url) => {
+    chrome.history.getVisits({ url: url }, res => {
+      if (res.length === 0) {
+        ignoreUrls.push(url);
+        chrome.history.addUrl({ url: url }, () => {});
+      }
+    });
+  };
+  _.each(urls, url => {
+    inner(url);
   });
 };
 
@@ -216,7 +221,7 @@ chrome.gcm.onMessage.addListener(message => {
   let data = JSON.parse(message.data.default);
   switch (data.action) {
   case 'visit':
-    recieve_visited(data.url);
+    recieve_visited(data.urls);
     break;
   }
 });
