@@ -197,7 +197,7 @@ chrome.runtime.onInstalled.addListener(details => {
 let ignoreUrls = [];
 
 chrome.history.onVisited.addListener(item => {
-  if (_.contains(ignoreUrls, item.url)) {
+  if (_.includes(ignoreUrls, item.url)) {
     ignoreUrls = _.reject(ignoreUrls, url => {
       return url === item.url;
     });
