@@ -67,7 +67,6 @@ let set_endpoint_arn = (endpoint) => {
 
 let register_endpoint = (device_id, uuid) => {
   return new Promise((resolve, reject) => {
-    let sns = new AWS.SNS();
 
     let args = {
       PlatformApplicationArn: applicationArn,
@@ -140,6 +139,7 @@ let request_visits = () => {
 };
 
 let send_message_to = (message, endpoint) => {
+  let sns = new AWS.SNS();
   sns.publish({TargetArn: endpoint, Message: JSON.stringify(message)}, (err, data) => {
     if (err && !err.retryable) {
       reject_endpoint(endpoint).then(endpoints => {
