@@ -134,6 +134,7 @@ let request_visits = () => {
   Promise.all([get_synced_at(), get_endpoint_arn()]).then(result => {
     let synced_at = result[0];
     let endpoint = result[1];
+    console.log('fetch request from', synced_at);
     send_message({action: 'sync', synced_at: synced_at, endpoint: endpoint});
   });
 };
@@ -143,10 +144,8 @@ let send_message_to = (message, endpoint) => {
   sns.publish({TargetArn: endpoint, Message: JSON.stringify(message)}, (err, data) => {
     if (err && !err.retryable) {
       reject_endpoint(endpoint).then(endpoints => {
-        console.log('rejected', endpoints);
+        console.log(endpoint, 'is removed');
       });
-    } else {
-      console.log('success', data);
     }
   });
 };
@@ -187,9 +186,7 @@ let setup_device = () => {
 };
 
 chrome.runtime.onInstalled.addListener(details => {
-  setup_device().then(sync_endpoint).then(devices => {
-    console.log(devices);
-  }).catch(err => {
+  setup_device().then(sync_endpoint).catch(err => {
     console.log('error in setup_device', err);
   });
 });
@@ -204,11 +201,13 @@ chrome.history.onVisited.addListener(item => {
     return;
   }
   if (item.visitCount === 1) {
-    send_message({action: 'visit', urls: item.url});
+    console.log('send:', item.url);
+    send_message({action: 'visit', urls: [item.url]});
   }
 });
 
 let response_visits = (synced_at, endpoint) => {
+  console.log('fetch response to', endpoint);
   visited_after(synced_at).then(histories => {
     let urls = _.chain(histories).filter(history => {
       return history.visitCount == 1;
@@ -223,6 +222,7 @@ let response_visits = (synced_at, endpoint) => {
 
 let recieve_visited = (urls) => {
   let inner = (url) => {
+    console.log('recieve:', url);
     chrome.history.getVisits({ url: url }, res => {
       if (res.length === 0) {
         ignoreUrls.push(url);
