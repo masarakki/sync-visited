@@ -67,7 +67,7 @@ let set_endpoint_arn = (endpoint) => {
 
 let register_endpoint = (device_id, uuid) => {
   return new Promise((resolve, reject) => {
-
+    const sns = new AWS.SNS();
     let args = {
       PlatformApplicationArn: applicationArn,
       Token: device_id,
@@ -165,8 +165,6 @@ let send_message = (message) => {
   });
 };
 
-chrome.runtime.onStartup.addListener(request_visits);
-
 let setup_device = () => {
   return new Promise((resolve, reject) => {
     get_endpoint_arn().then(endpoint => {
@@ -245,4 +243,8 @@ chrome.gcm.onMessage.addListener(message => {
   case 'sync':
     response_visits(data.synced_at, data.endpoint);
   }
+});
+
+chrome.browserAction.onClicked.addListener(e => {
+  request_visits();
 });
