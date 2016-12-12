@@ -15,6 +15,15 @@ AWS.config.update({
   region: 'us-east-1'
 });
 
+chrome.runtime.onInstalled.addListener(details => {
+  setup();
+});
+
+
+chrome.browserAction.onClicked.addListener(() => {
+  setup();
+});
+
 
 let get_synced_at = () => {
   return new Promise((resolve, reject) => {
@@ -183,11 +192,11 @@ let setup_device = () => {
   });
 };
 
-chrome.runtime.onInstalled.addListener(details => {
+const setup = () => {
   setup_device().then(sync_endpoint).catch(err => {
     console.log('error in setup_device', err);
   });
-});
+};
 
 let ignoreUrls = [];
 
