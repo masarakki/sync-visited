@@ -4,10 +4,10 @@ chrome.runtime.onInstalled.addListener(details => {
   console.log('previousVersion', details.previousVersion);
 });
 
-let _ = require('lodash');
-let AWS = require('aws-sdk');
-let senderId = '894495215557';
-let applicationArn = 'arn:aws:sns:us-east-1:009775665146:app/GCM/sync-visited';
+const _ = require('lodash');
+const AWS = require('aws-sdk');
+const senderId = '894495215557';
+const applicationArn = 'arn:aws:sns:us-east-1:009775665146:app/GCM/sync-visited';
 
 AWS.config.update({
   accessKeyId: 'AKIAI3FCUINQCGGJL2RA',
@@ -15,8 +15,7 @@ AWS.config.update({
   region: 'us-east-1'
 });
 
-
-let get_synced_at = () => {
+const get_synced_at = () => {
   return new Promise((resolve, reject) => {
     chrome.storage.local.get({synced_at: 0}, item => {
       resolve(item.synced_at);
@@ -24,7 +23,7 @@ let get_synced_at = () => {
   });
 };
 
-let set_synced_at = (time) => {
+const set_synced_at = (time) => {
   return new Promise((resolve, reject) => {
     chrome.storage.local.set({synced_at: time}, () => {
       resolve(time);
@@ -32,7 +31,7 @@ let set_synced_at = (time) => {
   });
 };
 
-let get_uuid = () => {
+const get_uuid = () => {
   return new Promise((resolve, reject) => {
     chrome.storage.sync.get('uuid', item => {
       let uuid = item.uuid;
@@ -45,7 +44,7 @@ let get_uuid = () => {
   });
 };
 
-let get_endpoint_arn = () => {
+const load_endpoint_arn = () => {
   return new Promise((resolve, reject) => {
     chrome.storage.local.get('device', (item) => {
       if (item.device) {
@@ -57,7 +56,18 @@ let get_endpoint_arn = () => {
   });
 };
 
-let set_endpoint_arn = (endpoint) => {
+
+const get_endpoint_arn = () => {
+  return load_endpoint_arn()
+    .catch(() => {
+      return Promise.all([get_device_id(), get_uuid()])
+        .then(register_endpoint)
+        .then(set_endpoint_arn);
+    })
+    .then(sync_endpoint);
+};
+
+const set_endpoint_arn = (endpoint) => {
   return new Promise((resolve, reject) => {
     chrome.storage.local.set({device: endpoint}, () => {
       resolve(endpoint);
@@ -65,10 +75,12 @@ let set_endpoint_arn = (endpoint) => {
   });
 };
 
-let register_endpoint = (device_id, uuid) => {
+const register_endpoint = (args) => {
+  const [device_id, uuid] = args;
+
   return new Promise((resolve, reject) => {
     const sns = new AWS.SNS();
-    let args = {
+    const args = {
       PlatformApplicationArn: applicationArn,
       Token: device_id,
       CustomUserData: `${chrome.runtime.id}: ${uuid}`
@@ -84,7 +96,7 @@ let register_endpoint = (device_id, uuid) => {
   });
 };
 
-let get_devices = () => {
+const get_devices = () => {
   return new Promise((resolve, reject) => {
     chrome.storage.sync.get({devices: []}, item => {
       resolve(item.devices);
@@ -92,7 +104,7 @@ let get_devices = () => {
   });
 };
 
-let get_device_id = () => {
+const get_device_id = () => {
   return new Promise((resolve, reject) => {
     chrome.gcm.register([senderId], device => {
       resolve(device);
@@ -100,7 +112,7 @@ let get_device_id = () => {
   });
 };
 
-let sync_endpoint = (endpoint) => {
+const sync_endpoint = (endpoint) => {
   return new Promise((resolve, reject) => {
     get_devices().then(devices => {
       devices = _.union(devices, [endpoint]);
@@ -111,10 +123,10 @@ let sync_endpoint = (endpoint) => {
   });
 };
 
-let reject_endpoint = (endpoint) => {
+const reject_endpoint = (endpoint) => {
   return new Promise((resolve, reject) => {
     get_devices().then(devices => {
-      devices = _.reject(devices, device => { return device == endpoint; });
+      devices = _.reject(devices, device => device == endpoint);
       chrome.storage.sync.set({devices: devices}, res => {
         resolve(devices);
       });
@@ -122,7 +134,7 @@ let reject_endpoint = (endpoint) => {
   });
 };
 
-let visited_after = (synced_at) => {
+const visited_after = (synced_at) => {
   return new Promise((resolve, reject) => {
     chrome.history.search({text: '', startTime: synced_at, maxResults: 1000 * 1000}, histories => {
       resolve(histories);
@@ -130,17 +142,17 @@ let visited_after = (synced_at) => {
   });
 };
 
-let request_visits = () => {
+const request_visits = () => {
   Promise.all([get_synced_at(), get_endpoint_arn()]).then(result => {
-    let synced_at = result[0];
-    let endpoint = result[1];
+    const [synced_at, endpoint] = result;
+
     console.log('fetch request from', synced_at);
     send_message({action: 'sync', synced_at: synced_at, endpoint: endpoint});
   });
 };
 
-let send_message_to = (message, endpoint) => {
-  let sns = new AWS.SNS();
+const send_message_to = (message, endpoint) => {
+  const sns = new AWS.SNS();
   sns.publish({TargetArn: endpoint, Message: JSON.stringify(message)}, (err, data) => {
     if (err && !err.retryable) {
       reject_endpoint(endpoint).then(endpoints => {
@@ -150,41 +162,20 @@ let send_message_to = (message, endpoint) => {
   });
 };
 
-let send_message = (message) => {
-  let sns = new AWS.SNS();
+const send_message = (message) => {
+  const sns = new AWS.SNS();
 
   Promise.all([get_devices(), get_endpoint_arn()]).then(result => {
-    let endpoints = result[0];
-    let myself = result[1];
+    const [endpoints, myself] = result;
 
-    endpoints.filter(endpoint => {
-      return endpoint != myself;
-    }).forEach(endpoint => {
-      send_message_to(message, endpoint);
-    });
-  });
-};
-
-let setup_device = () => {
-  return new Promise((resolve, reject) => {
-    get_endpoint_arn().then(endpoint => {
-      resolve(endpoint);
-    }).catch(() => {
-      Promise.all([get_device_id(), get_uuid()]).then(res => {
-        return register_endpoint(res[0], res[1]);
-      }).then(endpoint => {
-        return set_endpoint_arn(endpoint);
-      }).then(endpoint => {
-        resolve(endpoint);
-      }).catch(err => {
-        reject(err);
-      });
-    });
+    endpoints
+      .filter(endpoint => endpoint != myself)
+      .forEach(endpoint => send_message_to(message, endpoint));
   });
 };
 
 chrome.runtime.onInstalled.addListener(details => {
-  setup_device().then(sync_endpoint).catch(err => {
+  get_endpoint_arn().catch(err => {
     console.log('error in setup_device', err);
   });
 });
@@ -193,9 +184,7 @@ let ignoreUrls = [];
 
 chrome.history.onVisited.addListener(item => {
   if (_.includes(ignoreUrls, item.url)) {
-    ignoreUrls = _.reject(ignoreUrls, url => {
-      return url === item.url;
-    });
+    ignoreUrls = _.reject(ignoreUrls, url => url === item.url);
     return;
   }
   if (item.visitCount === 1) {
@@ -204,22 +193,21 @@ chrome.history.onVisited.addListener(item => {
   }
 });
 
-let response_visits = (synced_at, endpoint) => {
+const response_visits = (synced_at, endpoint) => {
   console.log('fetch response to', endpoint);
   visited_after(synced_at).then(histories => {
-    let urls = _.chain(histories).filter(history => {
-      return history.visitCount == 1;
-    }).map(history => {
-      return history.url;
-    }).uniq().value();
+    const urls = _.chain(histories)
+            .filter(history => history.visitCount == 1)
+            .map(history => history.url)
+            .uniq().value();
     _.each(_.chunk(urls, 10), urls => {
       send_message_to({action: 'visit', urls: urls}, endpoint);
     });
   });
 };
 
-let recieve_visited = (urls) => {
-  let inner = (url) => {
+const recieve_visited = (urls) => {
+  const inner = (url) => {
     console.log('recieve:', url);
     chrome.history.getVisits({ url: url }, res => {
       if (res.length === 0) {
@@ -235,7 +223,7 @@ let recieve_visited = (urls) => {
 };
 
 chrome.gcm.onMessage.addListener(message => {
-  let data = JSON.parse(message.data.default);
+  const data = JSON.parse(message.data.default);
   switch (data.action) {
   case 'visit':
     recieve_visited(data.urls);
