@@ -8,12 +8,10 @@ const _ = require('lodash');
 const AWS = require('aws-sdk');
 const senderId = '894495215557';
 const applicationArn = 'arn:aws:sns:us-east-1:009775665146:app/GCM/sync-visited';
+const IdentityPoolId = 'us-east-1:eab1e8c8-b795-4782-879c-d6b9c9ef2edc';
 
-AWS.config.update({
-  accessKeyId: 'AKIAI3FCUINQCGGJL2RA',
-  secretAccessKey: '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',
-  region: 'us-east-1'
-});
+AWS.config.region = 'us-east-1';
+AWS.config.credentials = new AWS.CognitoIdentityCredentials({IdentityPoolId});
 
 const get_synced_at = () => {
   return new Promise((resolve, reject) => {
