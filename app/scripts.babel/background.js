@@ -117,7 +117,7 @@ const sync_endpoint = (endpoint) => {
     get_devices().then(devices => {
       devices = _.union(devices, [endpoint]);
       chrome.storage.sync.set({devices: devices}, res => {
-        resolve(device);
+        resolve(endpoint);
       });
     });
   });
