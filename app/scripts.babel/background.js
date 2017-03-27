@@ -198,9 +198,15 @@ const response_visits = (synced_at, endpoint) => {
             .filter(history => history.visitCount == 1)
             .map(history => history.url)
             .uniq().value();
-    _.each(_.chunk(urls, 10), urls => {
-      send_message_to({action: 'visit', urls: urls}, endpoint);
-    });
+
+    const responseTen = (urls) => {
+      if (urls.length > 0) {
+        send_message_to({action: 'visit', urls: _.slice(urls, 0, 10)}, endpoint);
+        setTimeout(() => responseTen(_.slice(urls, 10)), 200);
+      }
+    };
+
+    responseTen(urls);
   });
 };
 
