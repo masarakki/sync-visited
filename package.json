@@ -4,6 +4,13 @@
   "engines": {
     "node": ">=0.8.0"
   },
+  "scripts": {
+    "build": "gulp build",
+    "package": "gulp package",
+    "test": "gulp test",
+    "lint": "gulp lint",
+    "clean": "gulp clean"
+  },
   "devDependencies": {
     "babel-core": "^6.20.0",
     "babel-preset-latest": "^6.16.0",
