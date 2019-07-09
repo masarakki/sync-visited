@@ -1,10 +1,14 @@
 {
   "appName": {
-    "message": "sync-visited",
+    "message": "sync visited",
     "description": "The name of the application"
   },
+  "appShortName": {
+    "message": "sync visite",
+    "description": "The short_name (maximum of 12 characters recommended) is a short version of the app's name."
+  },
   "appDescription": {
-    "message": "sync visited page informations via your google account",
+    "message": "sync vidited page informations via your google account.",
     "description": "The description of the application"
   }
 }

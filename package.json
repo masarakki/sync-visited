@@ -1,62 +1,64 @@
 {
   "name": "sync-visited",
   "private": true,
-  "engines": {
-    "node": ">=0.8.0"
-  },
+  "version": "0.0.0",
+  "description": "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
   "scripts": {
-    "build": "gulp build",
-    "package": "gulp package",
-    "test": "gulp test",
-    "lint": "gulp lint",
-    "clean": "gulp clean"
+    "start": "npm run dev:chrome",
+    "build": "npm run build:chrome",
+    "build:chrome": "gulp pack --production --vendor=chrome",
+    "build:firefox": "gulp pack --production --vendor=firefox",
+    "build:opera": "gulp pack --production --vendor=opera",
+    "build:edge": "gulp pack --production --vendor=edge",
+    "dev": "npm run dev:chrome",
+    "dev:chrome": "gulp --watch --vendor=chrome",
+    "dev:firefox": "gulp --watch --vendor=firefox",
+    "dev:opera": "gulp --watch --vendor=opera",
+    "dev:edge": "gulp --watch --vendor=edge",
+    "lint": "standard"
+  },
+  "standard": {
+    "globals": [
+      "chrome"
+    ]
   },
   "devDependencies": {
-    "babel-core": "^6.20.0",
-    "babel-preset-latest": "^6.16.0",
-    "babel-root-import": "^4.1.5",
-    "babelify": "^7.3.0",
-    "del": "^2.2.2",
-    "gulp": "^3.9.1",
-    "gulp-browserify": "^0.5.1",
-    "gulp-cache": "^0.4.5",
-    "gulp-chrome-manifest": "0.0.13",
-    "gulp-clean-css": "^2.2.2",
-    "gulp-eslint": "^2.1.0",
-    "gulp-htmlmin": "^1.3.0",
-    "gulp-if": "^2.0.2",
-    "gulp-imagemin": "^2.4.0",
-    "gulp-livereload": "^3.8.1",
-    "gulp-load-plugins": "^1.4.0",
-    "gulp-plumber": "^1.1.0",
-    "gulp-size": "^2.1.0",
-    "gulp-sourcemaps": "^1.9.1",
-    "gulp-uglify": "^1.5.4",
-    "gulp-useref": "^3.1.2",
-    "gulp-zip": "^3.2.0",
-    "main-bower-files": "^2.13.1",
-    "run-sequence": "^1.2.2",
-    "wiredep": "^4.0.0"
-  },
-  "eslintConfig": {
-    "env": {
-      "node": true,
-      "browser": true
-    },
-    "globals": {
-      "chrome": true
-    },
-    "rules": {
-      "eol-last": 0,
-      "quotes": [
-        2,
-        "single"
-      ]
-    }
+    "babel-cli": "6.x.x",
+    "babel-core": "6.x.x",
+    "babel-loader": "7.x.x",
+    "babel-preset-env": "1.x.x",
+    "chai": "4.x.x",
+    "chromereload": "0.x.x",
+    "debounce": "1.x.x",
+    "del": "3.x.x",
+    "gulp": "3.x.x",
+    "gulp-bump": "2.x.x",
+    "gulp-cache": "0.x.x",
+    "gulp-clean-css": "^3.x.x",
+    "gulp-filter": "^5.x.x",
+    "gulp-git": "^2.x.x",
+    "gulp-if": "2.x.x",
+    "gulp-imagemin": "3.x.x",
+    "gulp-json-transform": "0.x.x",
+    "gulp-less": "3.x.x",
+    "gulp-livereload": "3.x.x",
+    "gulp-plumber": "1.x.x",
+    "gulp-sass": "^3.x.x",
+    "gulp-sequence": "0.x.x",
+    "gulp-sourcemaps": "^2.x.x",
+    "gulp-tag-version": "1.x.x",
+    "gulp-util": "3.x.x",
+    "gulp-zip": "^4.x.x",
+    "require-dir": "0.x.x",
+    "standard": "^10.0.2",
+    "vinyl-named": "1.x.x",
+    "webpack": "3.x.x",
+    "webpack-stream": "3.x.x",
+    "yargs": "^8.x.x"
   },
   "dependencies": {
-    "aws-sdk": "^2.7.13",
-    "lodash": "^4.17.2",
-    "node-uuid": "^1.4.7"
+    "aws-sdk": "^2.489.0",
+    "lodash": "^4.17.11",
+    "node-uuid": "^1.4.8"
   }
 }
