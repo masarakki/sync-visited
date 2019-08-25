@@ -1,14 +1,18 @@
-'use strict';
-
+//import _ from 'lodash';
+//import AWS from 'aws-sdk';
+//import uuidv4 from 'uuid/v4';
+const AWS = {};
 chrome.runtime.onInstalled.addListener(details => {
   console.log('previousVersion', details.previousVersion);
 });
 
-const _ = require('lodash');
-const AWS = require('aws-sdk');
+AWS.config.credentials = new AWS.Credentials(process.env.AWS_ACCESS_KEY_ID, process.env.AWS_SECRET_ACCESS_KEY);
+const topicArn = process.env.TOPIC_ARN;
+
 const senderId = '894495215557';
 const applicationArn = 'arn:aws:sns:us-east-1:009775665146:app/GCM/sync-visited';
 const IdentityPoolId = 'us-east-1:eab1e8c8-b795-4782-879c-d6b9c9ef2edc';
+
 
 AWS.config.region = 'us-east-1';
 AWS.config.credentials = new AWS.CognitoIdentityCredentials({IdentityPoolId});
@@ -34,7 +38,7 @@ const get_uuid = () => {
     chrome.storage.sync.get('uuid', item => {
       let uuid = item.uuid;
       if (!uuid) {
-        uuid = require('node-uuid').v4();
+        uuid = uuidv4();
         chrome.storage.sync.set({uuid: uuid}, () => {});
       }
       resolve(uuid);
