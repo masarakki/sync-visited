@@ -25,7 +25,7 @@ Resources:
 Outputs:
   TopicArn:
     Value: !Ref Topic
-  AccessKeyId:
+  AwsAccessKeyId:
     Value: !Ref AccessKey
-  SecretAccessKey:
+  AwsSecretAccessKey:
     Value: !GetAtt AccessKey.SecretAccessKey
