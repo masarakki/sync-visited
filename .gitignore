@@ -1,5 +1,5 @@
-*.zip
 .env
 .env.aws
+dist
 node_modules
 app/scripts
