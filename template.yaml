@@ -20,10 +20,16 @@ Resources:
           - Effect: Allow
             Action:
               - sns:Publish
+              - sns:Subscribe
             Resource:
               - !Ref Topic
+          - Effect: Allow
+            Action:
+              - sns:createPlatformEndpoint
+            Resource:
+              - '*'
 Outputs:
-  TopicArn:
+  AwsTopicArn:
     Value: !Ref Topic
   AwsAccessKeyId:
     Value: !Ref AccessKey
