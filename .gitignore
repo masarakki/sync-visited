@@ -1,3 +1,4 @@
+*.zip
 .env
 .env.aws
 node_modules
