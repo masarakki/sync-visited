@@ -1,10 +1,7 @@
 require 'active_support/core_ext'
-require 'time'
 require 'dotenv'
 require 'json'
-require 'pathname'
 require 'fileutils'
-require 'zip'
 Dotenv.load
 
 task :stack do
@@ -22,18 +19,16 @@ task build: '.env.aws'  do
   sh "yarn build --mode production"
 end
 
-task deploy: :build do
-  dir = ENV['DEPLOY_PATH'] || '.'
-  path = File.join(dir, 'sync-visited.zip')
-  FileUtils.rm path, force: true
-
-  Zip::File.open(path, Zip::File::CREATE) do |zip|
-    zip.add('manifest.json', 'app/manifest.json')
-    ['app/_locales/**/*', 'app/scripts/**/*'].each do |path|
-      Dir.glob(path) do |f|
-        pathname = Pathname.new(f)
-        zip.add(pathname.relative_path_from('app').to_s, f)
-      end
-    end
+task dist: :build do
+  FileUtils.mkdir 'dist' unless File.exist? 'dist'
+  ['app/manifest.json', 'app/_locales', 'app/scripts'].each do |path|
+    FileUtils.cp_r path, 'dist'
   end
+end
+
+task deploy: :dist do
+  return unless ENV['DEPLOY_PATH']
+  path = File.join(ENV['DEPLOY_PATH'], 'sync-visited')
+  FileUtils.mkdir path unless File.exist? path
+  FileUtils.cp_r Dir.glob('dist/*'), path
 end
