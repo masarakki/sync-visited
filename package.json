@@ -7,7 +7,8 @@
   "license": "MIT",
   "scripts": {
     "build": "webpack",
-    "watch": "webpack --watch"
+    "watch": "webpack --watch",
+    "lint": "eslint --fix app/scripts.babel"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",
@@ -15,6 +16,9 @@
     "babel-loader": "^8.0.6",
     "babel-plugin-transform-inline-environment-variables": "^0.4.3",
     "dotenv": "^8.1.0",
+    "eslint": "^6.2.2",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-import": "^2.18.2",
     "webpack": "^4.39.2",
     "webpack-cli": "^3.3.7"
   },

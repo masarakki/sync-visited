@@ -1,7 +1,7 @@
 const path = require('path');
 const dotenv = require('dotenv');
 
-dotenv.config({path: '.env.aws'});
+dotenv.config({ path: '.env.aws' });
 
 module.exports = {
   mode: 'development',
@@ -14,14 +14,14 @@ module.exports = {
         test: /\.js$/,
         exclude: /node_modules/,
         use: {
-          loader: 'babel-loader'
-        }
-      }
+          loader: 'babel-loader',
+        },
+      },
     ],
   },
   output: {
     filename: '[name].js',
-    path: path.resolve(__dirname, 'app/scripts/')
+    path: path.resolve(__dirname, 'app/scripts/'),
   },
-  devtool: 'source-map'
+  devtool: 'source-map',
 };
