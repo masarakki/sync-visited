@@ -1,5 +1,6 @@
 import AWS from 'aws-sdk';
 import { getGcmDeviceId } from './gcm';
+import { load } from './storage';
 
 AWS.config.credentials = new AWS.Credentials(
   process.env.AWS_ACCESS_KEY_ID,
@@ -12,6 +13,7 @@ const topicArn = process.env.AWS_TOPIC_ARN;
 const applicationArn = process.env.AWS_APPLICATION_ARN;
 
 const getEndpointArn = (deviceId) => new Promise((resolve, reject) => {
+  console.log('getEndpointArn', { deviceId });
   sns.createPlatformEndpoint({
     PlatformApplicationArn: applicationArn,
     Token: deviceId,
@@ -38,6 +40,16 @@ const subscribe = (endpointArn) => new Promise((resolve, reject) => {
   });
 });
 
+const unsubscribe = (subscriptionArn) => new Promise((resolve, reject) => {
+  sns.unsubscribe({ SubscriionArn: subscriptionArn }, (err, data) => {
+    if (err) {
+      reject(err);
+    } else {
+      resolve(data);
+    }
+  });
+});
+
 export function publish(message) {
   return new Promise((resolve, reject) => {
     sns.publish({
@@ -53,9 +65,6 @@ export function publish(message) {
   });
 }
 
-export function subscribeTopic() {
-  return getGcmDeviceId().then(getEndpointArn).then(subscribe);
-}
-
-export function unsubscribeTopic() {
-}
+export const subscribeTopic = () => getGcmDeviceId().then(getEndpointArn).then(subscribe);
+export const getSubscriptionId = () => load('subscriptionId', subscribeTopic);
+export const unsubscribeTopic = () => getSubscriptionId().then(unsubscribe);
