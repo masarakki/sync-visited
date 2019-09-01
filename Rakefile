@@ -5,7 +5,7 @@ require 'fileutils'
 Dotenv.load
 
 task :stack do
-  sh "aws cloudformation update-stack --stack-name #{ENV['STACK_NAME']} --template-body file://template.yaml --capabilities CAPABILITY_IAM"
+  sh "aws cloudformation update-stack --stack-name #{ENV['STACK_NAME']} --template-body file://template.yaml --parameters ParameterKey=ApplicationArn,ParameterValue=#{ENV['AWS_APPLICATION_ARN']} --capabilities CAPABILITY_IAM"
 end
 
 task '.env.aws' do |task|

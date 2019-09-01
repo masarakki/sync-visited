@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import { publish } from './sns';
 import { setSyncedAt } from './sync';
-import { getGcmDeviceId } from './gcm';
 
 const ignoreUrls = {};
 
@@ -24,9 +23,7 @@ const handleVisited = (item) => {
   }
   if (item.visitCount === 1) {
     console.log('send:', item.url);
-    getGcmDeviceId().then((deviceId) => {
-      publish({ action: 'visit', urls: [item.url], from: deviceId });
-    });
+    publish({ action: 'visit', urls: [item.url] });
   }
 };
 

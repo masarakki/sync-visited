@@ -1,4 +1,5 @@
 import AWS from 'aws-sdk';
+import { merge } from 'lodash';
 import { getGcmDeviceId } from './gcm';
 import { load } from './storage';
 
@@ -12,8 +13,7 @@ const sns = new AWS.SNS();
 const topicArn = process.env.AWS_TOPIC_ARN;
 const applicationArn = process.env.AWS_APPLICATION_ARN;
 
-const getEndpointArn = (deviceId) => new Promise((resolve, reject) => {
-  console.log('getEndpointArn', { deviceId });
+const createEndpointArn = (deviceId) => new Promise((resolve, reject) => {
   sns.createPlatformEndpoint({
     PlatformApplicationArn: applicationArn,
     Token: deviceId,
@@ -25,6 +25,8 @@ const getEndpointArn = (deviceId) => new Promise((resolve, reject) => {
     }
   });
 });
+
+export const getEndpointArn = () => load('endpointArn', () => getGcmDeviceId().then(createEndpointArn));
 
 const subscribe = (endpointArn) => new Promise((resolve, reject) => {
   sns.subscribe({
@@ -50,21 +52,38 @@ const unsubscribe = (subscriptionArn) => new Promise((resolve, reject) => {
   });
 });
 
-export function publish(message) {
-  return new Promise((resolve, reject) => {
+const withEndpoint = (message) => getEndpointArn().then((arn) => merge(message, { from: arn }));
+
+export const directMessage = (targetArn, message) => {
+  withEndpoint(message).then((msg) => {
     sns.publish({
-      TopicArn: topicArn,
-      Message: JSON.stringify(message),
+      TargetArn: targetArn,
+      Message: JSON.stringify(msg),
     }, (err, data) => {
       if (err) {
-        reject(err);
+        Promise.reject(err);
       } else {
-        resolve(data);
+        Promise.resolve(data);
       }
     });
   });
-}
+};
 
-export const subscribeTopic = () => getGcmDeviceId().then(getEndpointArn).then(subscribe);
+export const publish = (message) => {
+  withEndpoint(message).then((msg) => {
+    sns.publish({
+      TopicArn: topicArn,
+      Message: JSON.stringify(msg),
+    }, (err, data) => {
+      if (err) {
+        Promise.reject(err);
+      } else {
+        Promise.resolve(data);
+      }
+    });
+  });
+};
+
+export const subscribeTopic = () => getEndpointArn().then(subscribe);
 export const getSubscriptionId = () => load('subscriptionId', subscribeTopic);
 export const unsubscribeTopic = () => getSubscriptionId().then(unsubscribe);

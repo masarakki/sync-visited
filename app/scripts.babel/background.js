@@ -7,7 +7,9 @@ import { requestSync, requestSyncAll } from './sync';
 chrome.runtime.onInstalled.addListener(() => {
   startMessageListener();
   startHistoryListener();
-  subscribeTopic()
+  Promise.resolve()
+  // .then(clear)
+    .then(subscribeTopic)
     .then(requestSync);
 });
 chrome.runtime.onSuspend.addListener(() => {

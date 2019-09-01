@@ -25,9 +25,13 @@ Resources:
               - !Ref Topic
           - Effect: Allow
             Action:
+              - sns:Publish
               - sns:createPlatformEndpoint
             Resource:
-              - '*'
+              - !Ref ApplicationArn
+Parameters:
+  ApplicationArn:
+    Type: String
 Outputs:
   AwsTopicArn:
     Value: !Ref Topic
