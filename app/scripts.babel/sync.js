@@ -30,7 +30,7 @@ export const responseSync = (t, targetArn) => {
       .value();
     console.log('send urls:', urls.length);
     const bulkResponse = (argUrls) => {
-      if (urls.length > 0) {
+      if (argUrls.length > 0) {
         directMessage(targetArn, { action: 'visit', urls: _.slice(argUrls, 0, bulkSize) });
         setTimeout(() => bulkResponse(_.slice(argUrls, bulkSize)), 200);
       }
