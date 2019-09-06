@@ -16,7 +16,7 @@ task '.env.aws' do |task|
 end
 
 task build: '.env.aws'  do
-  sh "yarn build --mode production"
+  sh "NODE_ENV=production yarn build"
 end
 
 task dist: :build do
