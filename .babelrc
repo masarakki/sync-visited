@@ -10,5 +10,16 @@
     ["transform-inline-environment-variables", {
       "include": ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_APPLICATION_ARN", "GCM_SENDER_ID"]
     }]
-  ]
+  ],
+  "env": {
+    "production": {
+      "plugins": [
+        [
+          "transform-remove-console", {
+            "exclude": [ "log" ],
+          },
+        ],
+      ],
+    },
+  },
 }

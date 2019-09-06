@@ -4,6 +4,7 @@ import { responseSync } from './sync';
 
 const handleMessage = (message) => {
   const data = JSON.parse(message.data.default);
+  console.debug('handleMessage', data);
   getEndpointArn().then((endpointArn) => {
     if (data.from !== endpointArn) {
       switch (data.action) {
