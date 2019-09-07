@@ -13,6 +13,8 @@ const sns = new AWS.SNS();
 const topicArn = process.env.AWS_TOPIC_ARN;
 const applicationArn = process.env.AWS_APPLICATION_ARN;
 
+console.log('topic-arn', topicArn);
+
 const createEndpointArn = (deviceId) => new Promise((resolve, reject) => {
   sns.createPlatformEndpoint({
     PlatformApplicationArn: applicationArn,
