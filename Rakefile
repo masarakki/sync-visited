@@ -15,20 +15,17 @@ task '.env.aws' do |task|
   File.write(task.name, envs.join("\n"))
 end
 
-task build: '.env.aws'  do
+task dev: '.env.aws' do
+  sh "NODE_ENV=development yarn build"
+end
+
+task prod: '.env.aws' do
   sh "NODE_ENV=production yarn build"
 end
 
-task dist: :build do
-  FileUtils.mkdir 'dist' unless File.exist? 'dist'
-  ['app/manifest.json', 'app/_locales', 'app/scripts'].each do |path|
-    FileUtils.cp_r path, 'dist'
-  end
-end
-
-task deploy: :dist do
+task deploy: :prod do
   return unless ENV['DEPLOY_PATH']
   path = File.join(ENV['DEPLOY_PATH'], 'sync-visited')
   FileUtils.mkdir path unless File.exist? path
-  FileUtils.cp_r Dir.glob('dist/*'), path
+  FileUtils.cp_r Dir.glob('prod/*'), path
 end
