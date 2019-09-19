@@ -8,7 +8,7 @@
   "scripts": {
     "build": "webpack",
     "watch": "webpack --watch",
-    "lint": "eslint --fix app/scripts.babel"
+    "lint": "eslint src"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",
