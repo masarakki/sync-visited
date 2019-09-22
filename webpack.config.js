@@ -15,7 +15,7 @@ const outputDir = isProd ? path.resolve(__dirname, 'prod') : path.resolve(__dirn
 module.exports = {
   mode: process.env.NODE_ENV,
   entry: {
-    'scripts/background.js': path.resolve(__dirname, 'app/scripts.babel/background.js'),
+    'scripts/background.js': path.resolve(__dirname, 'src/background.js'),
   },
   module: {
     rules: [
