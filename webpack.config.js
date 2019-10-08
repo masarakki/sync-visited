@@ -12,6 +12,8 @@ dotenv.config({ path: '.env.aws' });
 const isProd = process.env.NODE_ENV === 'production';
 const outputDir = isProd ? path.resolve(__dirname, 'prod') : path.resolve(__dirname, 'dev');
 
+const appName = isProd ? 'sync-visited' : 'sync-visited (dev)';
+
 module.exports = {
   mode: process.env.NODE_ENV,
   entry: {
@@ -39,11 +41,11 @@ module.exports = {
     new JsonPlugin('manifest.json', {
       manifest_version: 2,
       version: '2.0.0',
-      name: isProd ? 'sync-visted' : 'sync-visited (dev)',
+      name: appName,
       description: 'sync visited urls',
       background: { scripts: ['scripts/background.js'] },
       permissions: ['gcm', 'background', 'history', 'storage'],
-      browser_action: { default_title: 'sync-visted' },
+      browser_action: { default_title: appName },
     }, null, 2),
   ],
   devtool: 'source-map',
