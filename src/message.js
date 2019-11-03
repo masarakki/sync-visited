@@ -5,8 +5,8 @@ import { responseSync } from './sync';
 const handleMessage = (message) => {
   const data = JSON.parse(message.data.default);
   console.debug('handleMessage', data);
-  getEndpointArn().then((endpointArn) => {
-    if (data.from !== endpointArn) {
+  getEndpointArn().then((args) => {
+    if (data.from !== args.endpointArn) {
       switch (data.action) {
         case 'visit':
           return visit(data.urls);

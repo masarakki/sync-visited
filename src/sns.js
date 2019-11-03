@@ -28,13 +28,14 @@ const createEndpointArn = (deviceId) => new Promise((resolve, reject) => {
   });
 });
 
-export const getEndpointArn = () => load('endpointArn', () => getGcmDeviceId().then(createEndpointArn));
+export const getEndpointArn = () => load('endpointArn', () => getGcmDeviceId().then(createEndpointArn))
+  .then((endpointArn) => ({ endpointArn }));
 
-const subscribe = (endpointArn) => new Promise((resolve, reject) => {
+const subscribe = (args) => new Promise((resolve, reject) => {
   sns.subscribe({
     TopicArn: topicArn,
     Protocol: 'application',
-    Endpoint: endpointArn,
+    Endpoint: args.endpointArn,
   }, (err, data) => {
     if (err) {
       reject(err);
@@ -54,7 +55,8 @@ const unsubscribe = (subscriptionArn) => new Promise((resolve, reject) => {
   });
 });
 
-const withEndpoint = (message) => getEndpointArn().then((arn) => merge(message, { from: arn }));
+const withEndpoint = (message) => getEndpointArn()
+  .then((args) => merge(message, { from: args.endpointArn }));
 
 export const directMessage = (targetArn, message) => {
   withEndpoint(message).then((msg) => {
