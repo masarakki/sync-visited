@@ -27,11 +27,11 @@ const createEndpointArn = (deviceId) => new Promise((resolve, reject) => {
 });
 
 export const getEndpointArn = async () => {
-  const gcmDeviceId = await getGcmDeviceId();
-  const endpointArn = await load('endpointArn', () => createEndpointArn(gcmDeviceId));
+  const gcm = await getGcmDeviceId();
+  const endpointArn = await load('endpointArn', () => createEndpointArn(gcm.gcmDeviceId));
 
   return {
-    gcmDeviceId, topicArn, applicationArn, endpointArn,
+    ...gcm, topicArn, applicationArn, endpointArn,
   };
 };
 
