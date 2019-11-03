@@ -62,35 +62,33 @@ const unsubscribe = (subscriptionArn) => new Promise((resolve, reject) => {
 const withEndpoint = (message) => getEndpointArn()
   .then((args) => merge(message, { from: args.endpointArn }));
 
-export const directMessage = (targetArn, message) => {
-  withEndpoint(message).then((msg) => {
+export const directMessage = (targetArn, message) => withEndpoint(message)
+  .then((msg) => new Promise((resolve, reject) => {
     sns.publish({
       TargetArn: targetArn,
       Message: JSON.stringify(msg),
     }, (err, data) => {
       if (err) {
-        Promise.reject(err);
+        reject(err);
       } else {
-        Promise.resolve(data);
+        resolve(data);
       }
     });
-  });
-};
+  }));
 
-export const publish = (message) => {
-  withEndpoint(message).then((msg) => {
+export const publish = (message) => withEndpoint(message)
+  .then((msg) => new Promise((resolve, reject) => {
     sns.publish({
       TopicArn: topicArn,
       Message: JSON.stringify(msg),
     }, (err, data) => {
       if (err) {
-        Promise.reject(err);
+        reject(err);
       } else {
-        Promise.resolve(data);
+        resolve(data);
       }
     });
-  });
-};
+  }));
 
 export const subscribeTopic = () => getEndpointArn().then(subscribe);
 export const getSubscriptionId = () => load('subscriptionId', subscribeTopic);
