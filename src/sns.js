@@ -13,8 +13,6 @@ const sns = new AWS.SNS();
 const topicArn = process.env.AWS_TOPIC_ARN;
 const applicationArn = process.env.AWS_APPLICATION_ARN;
 
-console.log('topic-arn', topicArn);
-
 const createEndpointArn = (deviceId) => new Promise((resolve, reject) => {
   sns.createPlatformEndpoint({
     PlatformApplicationArn: applicationArn,
@@ -28,8 +26,14 @@ const createEndpointArn = (deviceId) => new Promise((resolve, reject) => {
   });
 });
 
-export const getEndpointArn = () => load('endpointArn', () => getGcmDeviceId().then(createEndpointArn))
-  .then((endpointArn) => ({ endpointArn }));
+export const getEndpointArn = async () => {
+  const gcmDeviceId = await getGcmDeviceId();
+  const endpointArn = await load('endpointArn', () => createEndpointArn(gcmDeviceId));
+
+  return {
+    gcmDeviceId, topicArn, applicationArn, endpointArn,
+  };
+};
 
 const subscribe = (args) => new Promise((resolve, reject) => {
   sns.subscribe({
@@ -40,7 +44,7 @@ const subscribe = (args) => new Promise((resolve, reject) => {
     if (err) {
       reject(err);
     } else {
-      resolve(data);
+      resolve({ ...args, subscriptionArn: data.SubscriptionArn });
     }
   });
 });
