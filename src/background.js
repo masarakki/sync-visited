@@ -3,6 +3,7 @@ import { startHistoryListener } from './history';
 import { subscribeTopic, unsubscribeTopic } from './sns';
 import { clear } from './storage';
 import { requestSync, requestSyncAll } from './sync';
+import logging from './logger';
 
 chrome.runtime.onInstalled.addListener(() => {
   startMessageListener();
@@ -10,6 +11,7 @@ chrome.runtime.onInstalled.addListener(() => {
   Promise.resolve()
   // .then(clear)
     .then(subscribeTopic)
+    .then(logging)
     .then(requestSync);
 });
 chrome.runtime.onSuspend.addListener(() => {
