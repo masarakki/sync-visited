@@ -12,7 +12,7 @@ const visitedAfter = (syncedAt) => new Promise((resolve) => {
 });
 
 const requestSyncFrom = (syncedAt) => {
-  console.log('send sync request:', { afetr: syncedAt });
+  console.info(`send sync request afetr: ${syncedAt}`);
   publish({ action: 'sync', syncedAt });
 };
 
@@ -21,14 +21,15 @@ export const requestSync = () => getSyncedAt().then(requestSyncFrom);
 
 export const responseSync = (t, targetArn) => {
   const bulkSize = 5;
-  console.log('receive sync request:', { from: targetArn, after: t });
+
+  console.info('receive sync request:', { from: targetArn, after: t });
   visitedAfter(t).then((histories) => {
     const urls = _.chain(histories)
       .filter((history) => history.visitCount === 1)
       .map((history) => history.url)
       .uniq()
       .value();
-    console.log('send urls:', urls.length);
+    console.debug('send urls:', urls.length);
     const bulkResponse = (argUrls) => {
       if (argUrls.length > 0) {
         directMessage(targetArn, { action: 'visit', urls: _.slice(argUrls, 0, bulkSize) });

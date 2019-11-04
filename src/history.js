@@ -6,7 +6,7 @@ const ignoreUrls = {};
 
 export const visit = (urls) => {
   const inner = (url) => {
-    console.log('recieve:', url);
+    console.info('recieve:', url);
     ignoreUrls[url] = 1;
     chrome.history.addUrl({ url }, () => {});
   };
@@ -22,7 +22,7 @@ const handleVisited = (item) => {
     return;
   }
   if (item.visitCount === 1) {
-    console.log('send:', item.url);
+    console.info('send:', item.url);
     publish({ action: 'visit', urls: [item.url] });
   }
 };
