@@ -48,5 +48,5 @@ module.exports = {
       browser_action: { default_title: appName },
     }, null, 2),
   ],
-  devtool: 'source-map',
+  devtool: 'inline-source-map',
 };
